@@ -1,0 +1,2 @@
+CREATE USER sample WITH PASSWORD '1';
+CREATE DATABASE sample OWNER =  sample;

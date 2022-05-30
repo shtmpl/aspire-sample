@@ -1,0 +1,237 @@
+logging:
+    config: classpath:logback-spring.xml
+
+# HTTP Server
+server:
+    port: 8081
+
+# comma separated origins list, by default all origins are allowed
+cors.allowed.origins: ${CORS_ALLOWED_ORIGINS:*}
+
+eureka:
+    client:
+        enabled: true
+        healthcheck:
+            enabled: true
+        fetch-registry: true
+        register-with-eureka: true
+        instance-info-replication-interval-seconds: 10
+        registry-fetch-interval-seconds: 10
+        service-url:
+            defaultZone: http://admin:${REGISTRY_PASSWORD:admin}@${REGISTRY_HOST:localhost}:8761/eureka/
+    instance:
+        appname: sample-service
+        instanceId: sample-service:${spring.application.instance-id:${random.value}}
+        prefer-ip-address: true
+        lease-renewal-interval-in-seconds: 5
+        lease-expiration-duration-in-seconds: 10
+        status-page-url-path: ${management.endpoints.web.base-path}/info
+        health-check-url-path: ${management.endpoints.web.base-path}/health
+        metadata-map:
+            zone: primary # This is needed for the load balancer
+            profile: ${spring.profiles.active}
+            version: ${info.project.version:}
+            git-version: ${git.commit.id.describe:}
+            git-commit: ${git.commit.id.abbrev:}
+            git-branch: ${git.branch:}
+        hostname: ${HOSTNAME:api}
+ribbon:
+    eureka:
+        enabled: true
+
+
+# Spring properties
+spring:
+    application:
+        name: sample-service
+    output:
+        ansi:
+            enabled: never
+    #  profiles:
+    #    active: localdev
+    servlet:
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
+    jpa:
+        hibernate:
+            ddl-auto: none
+        show-sql: false
+        properties:
+            hibernate.format_sql: true
+            hibernate.jdbc.time_zone: UTC
+            hibernate.jdbc.lob.non_contextual_creation: true
+            #hibernate.jdbc.batch_size: 500
+            hibernate.globally_quoted_identifiers: true
+
+    datasource:
+        url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/sample}
+        username: ${POSTGRES_USERNAME:sample}
+        password: ${POSTGRES_PASSWORD:1}
+        hikari:
+            maximum-pool-size: 20
+    cache:
+        type: caffeine
+        caffeine:
+            spec: maximumSize=500,expireAfterAccess=120s,recordStats
+    jackson:
+        serialization:
+            write-dates-as-timestamps: false
+
+    liquibase:
+        change-log: classpath:/db/changelog/db.changelog-master.xml
+
+    quartz:
+        job-store-type: jdbc
+        jdbc:
+            initialize-schema: never
+        overwrite-existing-jobs: true
+        properties:
+            org:
+                quartz:
+                    jobStore:
+                        driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+                        misfireThreshold: 10000
+
+management:
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: [ "configprops", "env", "health", "info", "threaddump", "logfile", "loggers", "jhimetrics", "prometheus" ]
+    endpoint:
+        health:
+            show-details: when-authorized
+        jhi-metrics:
+            enabled: true
+    info:
+        git:
+            mode: full
+    health:
+        mail:
+            enabled: true # When using the MailService, configure an SMTP server and set this to true
+        rabbit:
+            enabled: false
+    metrics:
+        export:
+            # Prometheus is the default metrics backend
+            prometheus:
+                enabled: true
+                step: 60
+        binders:
+            jvm:
+                enabled: true
+            processor:
+                enabled: true
+            uptime:
+                enabled: true
+            logback:
+                enabled: true
+            files:
+                enabled: true
+            integration:
+                enabled: true
+        distribution:
+            percentiles-histogram:
+                all: true
+            percentiles:
+                all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+        web:
+            server:
+                auto-time-requests: true
+
+
+push:
+    notification:
+        JWT_CERTIFICATE_FILE: ${CERT:/var/lib/sample/keys/key.p8}
+        JWT_TEAM_ID: 42
+        JWT_KEY_ID: 42
+        JWT_TOPIC: topic
+        GOOGLE_APP_CREDENTIALS: docker/keys/key.json
+
+
+
+request-log:
+    enable: false
+
+
+distribution:
+    delay: 60000
+
+
+ip-header-name: X-Real-IP
+
+#security:
+#  authentication:
+#    jwt:
+#      base64-secret: ${jhipster.security.authentication.jwt.base64-secret:Ybs9sZBxKONbQcN1P0X5HjonEguKEolglJJZNIwzC3T40kmtqshKffJ3C+HNzEHsV3RRqDigUvaThJeSpzsjzw==}
+
+jhipster:
+    async:
+        core-pool-size: 2
+        max-pool-size: 50
+        queue-capacity: 10000
+
+
+imports:
+    partner:
+        url: https://backoffice.ru/public-api/v3/partners
+    store:
+        url: https://backoffice.ru/public-api/v3/shops
+
+job:
+    campaign:
+        stats:
+            update:
+                cron: "0 */3 * ? * *"
+    cluster:
+        geoposition:
+            association:
+                enabled: true
+                cron: "0 0 * ? * *"
+    analytic:
+        report:
+            generation:
+                cron: "0 0 1 ? * *"
+    synchronization:
+        bank:
+            enabled: true
+            cron: "0 0 9 * * *"
+        store:
+            city:
+                cron: "0 0 0 ? * *"
+        terminal:
+            city:
+                enabled: false
+                cron: "0 0 2 ? * *"
+
+gateway:
+    proxy:
+        enabled: true
+        type: "http" # http | socks
+        host: "proxy-server.bank.group"
+        port: 3128
+        connectionTimeout: 2000
+        readTimeout: 2000
+    dadata:
+        api:
+            auth:
+                token: "52c03a642a54530f151d36806610b2eff11e86ff"
+            url: "https://suggestions.dadata.ru"
+    bank:
+        api:
+            auth:
+                username: "bank"
+                password: "1"
+            url: "https://sample.me"
+
+terminal:
+    test:
+        max.count: 100
+    city:
+        sync-on-endpoint-invocation: false
+        update-after-hours: 24
+
+notification:
+    state-log:
+        enabled: true

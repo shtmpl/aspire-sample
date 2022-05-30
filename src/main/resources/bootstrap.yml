@@ -1,0 +1,13 @@
+
+spring:
+    application:
+        name: sample-service
+    cloud:
+        config:
+            fail-fast: true # if not in "prod" profile, do not force to use Spring Cloud Config
+            uri: http://admin:${REGISTRY_PASSWORD:admin}@${REGISTRY_HOST:localhost}:8761/config
+            # name of the config server's property source (file.yml) that we want to use
+            name: sample-service
+            label: master # toggle to switch to a different version of the configuration as stored in git
+            # it can be set to any label, branch or commit of the configuration source Git repository
+

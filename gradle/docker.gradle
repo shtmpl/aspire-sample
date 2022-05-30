@@ -1,0 +1,28 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:${jibVersion}"
+    }
+}
+
+apply plugin: com.google.cloud.tools.jib.gradle.JibPlugin
+
+jib {
+    from {
+        image = 'openjdk:8-jre-alpine'
+    }
+    to {
+        image = 'sample/backend:latest'
+    }
+    container {
+        jvmFlags = ['-Xmx512m', '-Xms256m', '-Djava.security.egd=file:/dev/./urandom']
+        ports = ['8081']
+        environment = [
+                SPRING_PROFILES_ACTIVE    : 'stage'
+        ]
+        volumes = ['/tmp', '/var/lib/sample/keys', '/var/log/sample']
+        useCurrentTimestamp = true
+    }
+}
